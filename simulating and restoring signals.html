@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulating and Restoring Signals </title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600&display=swap');
+        .cyber-gradient {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .neon-shadow {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+        .cyber-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #4f46e5;
+            transition: all 0.3s ease;
+        }
+        .cyber-input:focus {
+            box-shadow: 0 0 15px #4f46e5;
+        }
+        .cyber-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #6366f1;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-900 font-['Exo_2']" style="background-image: url('data:image/svg+xml,%3Csvg width="52" height="26" viewBox="0 0 52 26" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%239C92AC" fill-opacity="0.1"%3E%3Cpath d="M10 10c0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6h2c0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4v2c-3.314 0-6-2.686-6-6 0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6zm25.464-1.95l8.486 8.486-1.414 1.414-8.486-8.486 1.414-1.414z" /%3E%3C/g%3E%3C/g%3E%3C/svg%3E');">
+    <div class="container mx-auto px-4 py-12 max-w-6xl">
+        <div class="glass-card neon-shadow rounded-2xl p-8 mb-12 relative overflow-hidden">
+            <div class="absolute inset-0 cyber-gradient opacity-20"></div>
+            <h1 class="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-indigo-400 to-pink-400 bg-clip-text text-transparent">
+                🌊 Simulating and Restoring Signals 
+            </h1>
+            
+            <div class="space-y-8 relative z-10">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="space-y-4">
+                        <label class="block text-lg font-semibold text-indigo-300">
+                            📈 Amplitude (A)
+                        </label>
+                        <input 
+                            type="range" 
+                            id="amplitude" 
+                            min="0.5" 
+                            max="5" 
+                            step="0.1" 
+                            value="1"
+                            class="cyber-slider w-full"
+                        >
+                        <div class="text-center text-xl font-bold bg-gradient-to-r from-indigo-400 to-pink-400 bg-clip-text text-transparent" id="amplitudeValue">1</div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <label class="block text-lg font-semibold text-indigo-300">
+                            🔁 Frequency (Hz)
+                        </label>
+                        <input 
+                            type="range" 
+                            id="frequency" 
+                            min="1" 
+                            max="10" 
+                            step="0.1" 
+                            value="2"
+                            class="cyber-slider w-full"
+                        >
+                        <div class="text-center text-xl font-bold bg-gradient-to-r from-indigo-400 to-pink-400 bg-clip-text text-transparent" id="frequencyValue">2</div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <label class="block text-lg font-semibold text-indigo-300">
+                            🌀 Phase (rad)
+                        </label>
+                        <input 
+                            type="range" 
+                            id="phase" 
+                            min="0" 
+                            max="6.28" 
+                            step="0.01" 
+                            value="0"
+                            class="cyber-slider w-full"
+                        >
+                        <div class="text-center text-xl font-bold bg-gradient-to-r from-indigo-400 to-pink-400 bg-clip-text text-transparent" id="phaseValue">0</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <label class="block text-lg font-semibold text-indigo-300">
+                            🛠 Impairment Type
+                        </label>
+                        <select 
+                            id="impairmentType" 
+                            class="cyber-input w-full px-6 py-3 rounded-xl text-indigo-100 focus:outline-none"
+                            onchange="clearGraphs()"
+                        >
+                            <option value="attenuation" class="bg-gray-800">Attenuation</option>
+                            <option value="distortion" class="bg-gray-800">Distortion</option>
+                            <option value="noise" class="bg-gray-800">Noise</option>
+                            <option value="interference" class="bg-gray-800">Interference</option>
+                        </select>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <label class="block text-lg font-semibold text-indigo-300">
+                            ⚡ Strength
+                        </label>
+                        <div class="space-y-2">
+                            <input 
+                                type="range" 
+                                id="impairmentStrength" 
+                                min="0.1" 
+                                max="2.0" 
+                                step="0.1" 
+                                value="1.0"
+                                class="cyber-slider w-full h-2 bg-gray-700 rounded-lg cursor-pointer"
+                            >
+                            <div class="text-center text-xl font-bold bg-gradient-to-r from-indigo-400 to-pink-400 bg-clip-text text-transparent" id="strengthValue">1.0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button 
+                    onclick="generateSignal()" 
+                    class="w-full cyber-gradient hover:scale-[1.02] transition-transform text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-2xl"
+                >
+                    🌟 Generate Signal Analysis
+                </button>
+            </div>
+        </div>
+        
+        <!-- Visualization Cards -->
+        <div class="grid grid-cols-1 gap-4 mb-12">
+            <div class="glass-card neon-shadow rounded-2xl p-6 transition-transform hover:scale-[1.02]">
+                <h2 class="text-2xl font-bold mb-4 bg-gradient-to-r from-green-400 to-cyan-400 bg-clip-text text-transparent">Original Signal</h2>
+                <div id="originalSignalPlot" class="w-full h-64"></div>
+            </div>
+            <div class="glass-card neon-shadow rounded-2xl p-6 transition-transform hover:scale-[1.02]">
+                <h2 class="text-2xl font-bold mb-4 bg-gradient-to-r from-red-400 to-pink-400 bg-clip-text text-transparent">Impaired Signal</h2>
+                <div id="impairedSignalPlot" class="w-full h-64"></div>
+            </div>
+            <div class="glass-card neon-shadow rounded-2xl p-6 transition-transform hover:scale-[1.02]">
+                <h2 class="text-2xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">Restored Signal</h2>
+                <div id="restoredSignalPlot" class="w-full h-64"></div>
+            </div>
+            <div class="glass-card neon-shadow rounded-2xl p-6 transition-transform hover:scale-[1.02]">
+                <h2 class="text-2xl font-bold mb-4 bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">Combined View</h2>
+                <div id="combinedSignalPlot" class="w-full h-64"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+         let t = [], original = [], impaired = [], restored = [];
+        const samplingRate = 1000;
+        const duration = 2;
+
+        // Initialize controls 
+        function initControls() {
+            const strengthSlider = document.getElementById('impairmentStrength');
+            strengthSlider.max = 2.0;
+            strengthSlider.step = 0.2;
+            strengthSlider.value = 1.0;
+            document.getElementById('strengthValue').textContent = '1.0';
+        }
+        initControls();
+
+
+        function updateValues() {
+            document.getElementById('amplitudeValue').textContent = 
+                document.getElementById('amplitude').value;
+            document.getElementById('frequencyValue').textContent = 
+                document.getElementById('frequency').value;
+            document.getElementById('phaseValue').textContent = 
+                parseFloat(document.getElementById('phase').value).toFixed(2);
+            document.getElementById('strengthValue').textContent = 
+                document.getElementById('impairmentStrength').value;
+        }
+
+        document.querySelectorAll('input[type="range"]').forEach(input => {
+            input.addEventListener('input', updateValues);
+        });
+
+        //clear graph 
+        function clearGraphs() {
+            ['originalSignalPlot', 'impairedSignalPlot', 'restoredSignalPlot', 'combinedSignalPlot'].forEach(id => {
+                Plotly.purge(id);
+            });
+            t = [];
+            original = [];
+            impaired = [];
+            restored = [];
+        }
+
+        // generating signals 
+        function generateSignal() {
+            clearGraphs();
+            
+            const amplitude = parseFloat(document.getElementById('amplitude').value);
+            const frequency = parseFloat(document.getElementById('frequency').value);
+            const phase = parseFloat(document.getElementById('phase').value);
+            const strength = parseFloat(document.getElementById('impairmentStrength').value);
+            
+            t = Array.from({length: samplingRate * duration}, (_, i) => i / samplingRate);
+            original = t.map(x => amplitude * Math.sin(2 * Math.PI * frequency * x + phase));
+
+            // Impairment Application
+            applyImpairment(strength);
+            
+            // Restoration Process
+            restoreSignal(strength);
+
+            //graph plot
+            plotSignals();
+        }
+
+        // Impairment Functions
+        function applyImpairment(strength) {
+            const type = document.getElementById("impairmentType").value;
+            const baseFreq = 2 * Math.PI * parseFloat(document.getElementById('frequency').value);
+            
+            switch(type) {
+                case 'attenuation':
+                    let attenuationFactor = Math.max(0.1, 1 - strength * 0.7); // Ensure factor never goes negative
+                    impaired = original.map(x => x * attenuationFactor);
+                    break;
+                    
+                case 'distortion':
+                    impaired = original.map((x, i) => {
+                        const t = i / samplingRate;
+                        return x * (1 + strength * 0.8 * (
+                            Math.sin(3 * baseFreq * t) + 
+                            0.9 * Math.sin(5 * baseFreq * t) +
+                            0.6 * Math.sin(7 * baseFreq * t)
+                        )) + strength * 0.4 * x * Math.sin(0.3 * baseFreq * t);
+                    });
+                    break;
+                    
+                case 'noise':
+                    impaired = original.map(x => 
+                        x + strength * (Math.random() - 0.5) * 12 * x 
+                    );
+                    break;
+                    
+                case 'interference':
+                    impaired = original.map(x => {
+                        return x + strength * 1.2 * (
+                            Math.sin(4 * baseFreq * x) + 
+                            1.2 * Math.sin(6 * baseFreq * x)
+                        );
+                    });
+                    break;
+            }
+        }
+
+        //Restoration Functions
+        function restoreSignal(strength) {
+            const type = document.getElementById("impairmentType").value;
+            const baseFreq = 2 * Math.PI * parseFloat(document.getElementById('frequency').value);
+            
+            switch(type) {
+                case 'attenuation':
+                    const impairedEnergy = impaired.reduce((sum, x) => sum + x*x, 0);
+                    const originalEnergy = original.reduce((sum, x) => sum + x*x, 0);
+                    const gain = Math.sqrt(originalEnergy / (impairedEnergy || 1e-9));
+                    restored = impaired.map(x => x * gain * 1.1); //  10% overcompensation
+                    break;
+                    
+                case 'distortion':
+                    // Power law transform
+                    restored = impaired.map(x => Math.sign(x) * Math.pow(Math.abs(x), 0.7)); 
+
+                    // First smoothing stage
+                    restored = restored.map((x, i) => {
+                        let prev = i > 0 ? restored[i - 1] : x;
+                        let next = i < restored.length - 1 ? restored[i + 1] : x;
+                        
+                        
+                        return (x * 0.8 + prev * 0.1 + next * 0.1);
+                    });
+
+                    // Second smoothing stage
+                    restored = restored.map((x, i) => {
+                        let prev2 = i > 1 ? restored[i - 2] : x;
+                        let next2 = i < restored.length - 2 ? restored[i + 2] : x;
+                        
+                        return (x * 0.85 + prev2 * 0.075 + next2 * 0.075);
+                    });
+
+                    // Phase correction
+                    restored = restored.map((x, i) => {
+                        let phaseShift = Math.PI / 20;  
+                        let t = i / samplingRate;
+                        return x * Math.cos(phaseShift) - Math.sin(2 * Math.PI * 5 * t) * Math.sin(phaseShift);
+                    });
+
+                    break;
+
+
+                case 'noise':
+                    restored = waveletDenoise(impaired, 1.2 + strength); // Wavelet Denoising
+                    restored = kalmanFilter(restored, 0.05); // Kalman Filter
+                    restored = gaussianFilter(restored, 2.5); // Gaussian Filter
+                    break;
+                    
+                case 'interference':
+                    restored = notchFilter(impaired, 4 * baseFreq, 0.95); // Notch Filter 4th harmonic
+                    restored = notchFilter(restored, 6 * baseFreq, 0.95); // Notch Filter 6th harmonic
+                    restored = adaptiveFilter(restored, 0.008, 25); // Adaptive Filter
+                    break;
+            }
+        }
+
+        function phaseCorrectionFilter(data, baseFreq) {
+            const phaseShift = Math.PI/8; 
+            return data.map((x, i) => {
+                const t = i / samplingRate;
+                return x * Math.cos(phaseShift) - Math.sin(baseFreq * t) * Math.sin(phaseShift);
+            });
+        }
+
+        // Kalman Filter Implementation
+        function kalmanFilter(data, processNoise) {
+            let q = processNoise;
+            let r = 0.08; 
+            let p = 1;
+            let x = 0;
+            
+            return data.map(z => {
+                p = p + q;
+                const k = p / (p + r);
+                x = x + k * (z - x);
+                p = (1 - k) * p;
+                return x;
+            });
+        }
+
+
+        // Adaptive Filter Implementations
+        function adaptiveFilter(data, stepSize, filterLength) {
+            let weights = new Array(filterLength).fill(0);
+            return data.map((_, i) => {
+                if(i < filterLength) return data[i];
+                
+                const inputs = data.slice(i - filterLength, i);
+                const estimation = weights.reduce((sum, w, j) => sum + w * inputs[j], 0);
+                const error = data[i] - estimation;
+                const norm = inputs.reduce((sum, x) => sum + x*x, 0) || 1;
+                
+                weights = weights.map((w, j) => 
+                    w + (stepSize * error * inputs[j]) / norm
+                );
+                
+                return estimation + 0.3 * error; 
+            });
+        }
+
+        // Wavelet Denoising Implementation
+        function waveletDenoise(data, threshold) {
+            return data.map((x, i) => {
+                if(i < 2 || i > data.length - 3) return x;
+                const wavelet = (data[i-2] - 4*data[i-1] + 6*x - 4*data[i+1] + data[i+2])/16;
+                return Math.abs(wavelet) > threshold ? x * 0.6 : x;
+            });
+        }
+
+        // Gaussian Filter Implementation
+        function gaussianFilter(data, sigma = 3) {
+            const kernelSize = Math.ceil(sigma * 3);
+            const kernel = Array.from({length: kernelSize*2+1}, (_, i) => {
+                const x = i - kernelSize;
+                return Math.exp(-(x*x)/(2*sigma*sigma));
+            });
+            const sum = kernel.reduce((a, b) => a + b, 0);
+            
+            return data.map((_, i) => {
+                let val = 0;
+                for(let j = -kernelSize; j <= kernelSize; j++) {
+                    if(i+j >= 0 && i+j < data.length) {
+                        val += data[i+j] * kernel[j + kernelSize];
+                    }
+                }
+                return val / sum;
+            });
+        }
+
+        // Notch Filter Implementation
+        function notchFilter(data, frequency, Q = 0.7) {
+            const w0 = 2 * Math.PI * frequency / samplingRate;
+            const alpha = Math.sin(w0) / (2 * Q);
+            const b = [1, -2*Math.cos(w0), 1];
+            const a = [1 + alpha, -2*Math.cos(w0), 1 - alpha];
+            
+            let y = [];
+            let [x1, x2, y1, y2] = [0, 0, 0, 0];
+            for(let x of data) {
+                const y0 = (b[0]*x + b[1]*x1 + b[2]*x2 - a[1]*y1 - a[2]*y2) / a[0];
+                y.push(y0);
+                [x2, x1] = [x1, x];
+                [y2, y1] = [y1, y0];
+            }
+            return y;
+        }
+
+        //  plotting functions
+        function plotSignals() {
+            const originalTrace = {
+                x: t, y: original, 
+                mode: 'lines', name: "Original", 
+                line: {color: '#3B82F6', width: 1}
+            };
+            
+            const impairedTrace = {
+                x: t, y: impaired, 
+                mode: 'lines', name: "Impaired", 
+                line: {color: '#EF4444', width: 1}
+            };
+            
+            const restoredTrace = {
+                x: t, y: restored, 
+                mode: 'lines', name: "Restored", 
+                line: {color: '#10B981', width: 1.2}
+            };
+
+            Plotly.newPlot("originalSignalPlot", [originalTrace], createLayout("Original Signal"));
+            Plotly.newPlot("impairedSignalPlot", [impairedTrace], createLayout("Impaired Signal"));
+            Plotly.newPlot("restoredSignalPlot", [restoredTrace], createLayout("Restored Signal"));
+            Plotly.newPlot("combinedSignalPlot", [originalTrace, impairedTrace, restoredTrace], createLayout("Combined Signals"));
+        }
+
+        function createLayout(title) {
+            return {
+                title: {text: title, font: {family: 'Exo 2', size: 24, color: '#e0e0e0'}},
+                xaxis: {title: "Time (s)", gridcolor: 'rgba(255,255,255,0.1)', color: '#e0e0e0'}, 
+                yaxis: {title: "Amplitude", gridcolor: 'rgba(255,255,255,0.1)', color: '#e0e0e0'},
+                paper_bgcolor: 'rgba(0,0,0,0.3)',
+                plot_bgcolor: 'rgba(0,0,0,0.3)',
+                margin: {t: 60, r: 40, b: 60, l: 60},
+                legend: {orientation: "h", y: -0.2, font: {color: '#e0e0e0'}},
+                hovermode: 'closest'
+            };
+        }
+
+        function createConfig() {
+            return {
+                responsive: true,
+                displaylogo: false,
+                modeBarButtonsToRemove: ['sendDataToCloud', 'autoScale2d', 'resetScale2d', 'toggleSpikelines'],
+                modeBarButtonsToAdd: ['hoverclosest', 'hovercompare']
+            };
+        }
+    </script>
+</body>
+</html>
