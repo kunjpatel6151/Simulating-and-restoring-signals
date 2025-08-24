@@ -1,6 +1,6 @@
 # Signal Impairment and Restoration Simulator
 
-Link : 
+Link : https://kunjpatel6151.github.io/Simulating-and-restoring-signals/
 
 A web-based simulator that demonstrates the effects of common signal impairments during data transmission and applies restoration techniques to recover the original signal. The simulator is designed to help visualize how attenuation, distortion, noise, and interference affect signals and how different algorithms can mitigate these impairments.
 
